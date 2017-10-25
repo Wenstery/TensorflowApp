@@ -1,0 +1,31 @@
+一 build
+1.Prepare your machine  https://www.tensorflow.org/versions/r0.11/get_started/os_setup.html#installing-from-sources
+2.git clone --recursive  https://github.com/tensorflow/tensorflow.git
+3.Edit the WORKSPACE file (uncomment Android paths)
+4.Run ./configure script
+5.bazel build //tensorflow/examples/android:tensorflow_demo --fat_apk_cpu=armeabi-v7a,arm64-v8a
+
+二 Add libs
+Copy libs to facerecognitionlibrary to compile the tensorflow so-file
+1.Copy all from "tensorflow/bazel-out/android-aarch64-linux-android-4.9-gnu-libstdcpp-fastbuild/genfiles/tensorflow" to "facerecognitionlibrary/jni-build/jni/genfiles/tensorflow"
+2.Copy all from "tensorflow/tensorflow" to "facerecognitionlibrary/jni-build/jni/include/tensorflow"
+3.Copy all from "tensorflow/third_party" to "facerecognitionlibrary/jni-build/jni/include/third_party"
+4.Copy all from "tensorflow/bazel-tensorflow/external/protobuf" to "facerecognitionlibrary/jni-build/jni/include/google/protobuf"
+5.Copy the files "libprotos_all_cc.a", "libandroid_tensorflow_lib.lo", "libandroid_tensorflow_lib_lite.lo", "kernels/libandroid_tensorflow_kernels.lo" from "tensorflow/bazel-out/android-aarch64-linux-android-4.9-gnu-libstdcpp-fastbuild/bin/tensorflow/core" to "facerecognitionlibrary/jni-build/jni/libs/arm64-v8a"
+6.Copy the files "libprotobuf.a" and "libprotobuf_lite.a" from "tensorflow/bazel-out/android-aarch64-linux-android-4.9-gnu-libstdcpp-fastbuild/bin/external/protobuf" to "facerecognitionlibrary/jni-build/jni/libs/arm64-v8a"
+7.Change line in Application.mk to "APP_ABI := arm64-v8a"
+8.Delete the lines "'-Wl,--icf=all' ", "'-march=armv7-a' " and "-Wl,--fix-cortex-a8 " in the Android.mk file
+9.Make, Make install
+
+三 external
+在tensorflow源代码包中运行，下面编译指令，生成libtensorflow_inference.so. 通过修改cpu=arm64-v8a,armeabi-v7a,armeabi分别生成各平台的so。
+Then, to build the native TF library:
+bazel build -c opt //tensorflow/contrib/android:libtensorflow_inference.so \
+   --crosstool_top=//external:android/crosstool \
+   --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
+   --cpu=armeabi-v7a
+
+在tensorflow源代码包中运行，下面编译指令，生成libtensorflow_demo.so. 通过修改cpu=arm64-v8a,armeabi-v7a,armeabi分别生成各平台的so。
+bazel build //tensorflow/examples/android:tensorflow_demo --fat_apk_cpu=armeabi-v7a,arm64-v8a
+
+然后将2个so库，分别放入android studio  jnilibs的对于lib库文件加。
